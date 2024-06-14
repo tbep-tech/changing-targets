@@ -1,0 +1,431 @@
+---
+title: "WATER QUALITY DASHBOARD"
+output: 
+  flexdashboard::flex_dashboard:
+     logo: www/tarponlogo3.png
+runtime: shiny
+css: styles.css
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+# libraries
+library(flexdashboard)
+library(here)
+library(mapview)
+library(leaflet)
+library(tbeptools)
+# devtools::load_all(here())
+library(tidyverse)
+library(patchwork)
+library(shiny)
+library(sf)
+library(scales)
+library(shinyjs)
+library(RColorBrewer)
+
+prj <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+
+# # local file path
+# xlsx <- here('data-raw', '2018_Results_Updated.xls')
+# 
+# # import data
+# epcdata <- read_importwq(xlsx, download_latest_epchc = F)
+load(here::here('data', 'epcdata.RData'))
+
+# minor theme tweaks
+pthm <- theme(
+      axis.text.x = element_text(size = 11, angle = 45, hjust = 1),
+      legend.text = element_text(size = 12), 
+      axis.title.y = element_text(size = 12)
+      )
+
+# locations
+locs <- epcdata %>% 
+  select(epchc_station, Longitude, Latitude) %>% 
+  unique
+```
+
+```{r reactives}
+
+useShinyjs(rmd = TRUE)
+observeEvent(input$reset_input, {
+      reset("otbchltrg")
+      reset("hbchltrg")
+      reset("mtbchltrg")
+      reset("ltbchltrg")
+      reset("otblatrg")
+      reset("hblatrg")
+      reset("mtblatrg")
+      reset("ltblatrg")
+    })
+
+# format target inputs
+trginps <- reactive({
+
+  # inputs
+  trginps <- tibble(
+      otbchltrg = input$otbchltrg,
+      hbchltrg = input$hbchltrg, 
+      mtbchltrg = input$mtbchltrg, 
+      ltbchltrg = input$ltbchltrg,
+      otblatrg = input$otblatrg,
+      hblatrg = input$hblatrg,
+      mtblatrg = input$mtblatrg,
+      ltblatrg = input$ltblatrg
+    ) %>% 
+    gather('var', 'val') %>% 
+    mutate(
+      bay_segment = gsub('chltrg$|latrg$', '', var),
+      bay_segment = toupper(bay_segment), 
+      var = gsub('^.*(chltrg$|latrg$)', '\\1', var), 
+      var = gsub('trg$', '_target', var), 
+      var = gsub('^chl', 'chla', var)
+    ) %>% 
+    spread(var, val)
+  
+  # se diff for targets
+  trgs <- targets %>% 
+    mutate(
+      lase1 = la_smallex - la_target, 
+      chlase1 = chla_smallex - chla_target, 
+      lase2 = la_thresh - la_smallex,
+      chlase2 = chla_thresh - chla_smallex
+    ) %>% 
+    select(bay_segment, name, lase1, chlase1, lase2, chlase2)
+  
+  # combine with se, estimate new thresholds
+  out <- trginps %>% 
+    left_join(trgs, by = 'bay_segment') %>% 
+    mutate(
+      chla_smallex = chla_target + chlase1, 
+      chla_thresh = chla_smallex + chlase2,
+      la_smallex = la_target + lase1, 
+      la_thresh = la_smallex + lase2
+    ) %>% 
+    select(bay_segment, name, chla_target, chla_smallex, chla_thresh, la_target, la_smallex, la_thresh)
+  
+  return(out)
+  
+})
+
+# OTB threshold plot
+thrplototb <- reactive({
+  
+  # inputs
+  trginps <- trginps()
+  
+  req(trginps)
+    
+  p1 <- show_thrplot(epcdata, bay_segment = "OTB", thr = "chla", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  p2 <- show_thrplot(epcdata, bay_segment = "OTB", thr = "la", trgs = trginps) + 
+    ggtitle(NULL) + 
+    pthm
+  
+  p1 + p2 + plot_layout(ncol = 1)
+  
+})
+
+# HB threshold plot
+thrplothb <- reactive({
+  
+  # inputs
+  trginps <- trginps()
+  
+  req(trginps)
+    
+  p1 <- show_thrplot(epcdata, bay_segment = "HB", thr = "chla", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  p2 <- show_thrplot(epcdata, bay_segment = "HB", thr = "la", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  
+  p1 + p2 + plot_layout(ncol = 1)
+  
+})
+
+# MTB threshold plot
+thrplotmtb <- reactive({
+  
+  # inputs
+  trginps <- trginps()
+  
+  req(trginps)
+  
+  p1 <- show_thrplot(epcdata, bay_segment = "MTB", thr = "chla", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  p2 <- show_thrplot(epcdata, bay_segment = "MTB", thr = "la", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  
+  p1 + p2 + plot_layout(ncol = 1)
+  
+})
+
+# LTB threshold plot
+thrplotltb <- reactive({
+  
+  # inputs
+  trginps <- trginps()
+  
+  req(trginps)
+  
+  p1 <- show_thrplot(epcdata, bay_segment = "LTB", thr = "chla", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  p2 <- show_thrplot(epcdata, bay_segment = "LTB", thr = "la", trgs = trginps) + 
+    ggtitle(NULL) +
+    pthm
+  
+  p1 + p2 + plot_layout(ncol = 1)
+  
+})
+
+# data to map based on yrsel, thrsel
+mapdat <- reactive({
+  
+  # inputs
+  trginps <- trginps()
+  yrsel <- input$yrsel
+  thrsel <- input$thrsel
+  
+  req(trginps)
+  
+  # data to map
+  toplo <- epcdata %>% 
+    anlz_avedatsite %>% 
+    anlz_attainsite(thr = thrsel, trg = trginps)
+
+  return(toplo)
+  
+  
+})
+
+# color palette for target met
+palyes <- reactive({
+  
+  # input
+  mapdat <- mapdat()
+  
+  dmn <- mapdat %>% 
+    filter(trgtmet == 'yes') %>% 
+    pull(val) %>% 
+    range(na.rm = T)
+  
+  colorNumeric(
+    palette = brewer.pal(4, 'Greens'),
+    na.color = 'yellow',
+    domain = dmn
+    )
+  
+})
+
+# color palette for target not met
+palno <- reactive({
+  
+  # input
+  mapdat <- mapdat()
+  
+  dmn <- mapdat %>% 
+    filter(trgtmet == 'no') %>% 
+    pull(val) %>% 
+    range(na.rm = T)
+  
+  colorNumeric(
+    palette = brewer.pal(4, 'Reds'),
+    na.color = 'yellow',
+    domain = dmn
+    )
+  
+})
+  
+# site attainment map
+attmap <- reactive({
+  
+  # inputs
+  thrsel <- input$thrsel
+  yrsel <- input$yrsel
+  palyes <- palyes()
+  palno <- palno()
+  mapdat <- mapdat()
+  
+  # filter by year to map
+  toplo <- mapdat %>% 
+    filter(yr %in% yrsel) %>% 
+    mutate(
+      cols = case_when(
+        trgtmet == 'yes' ~ palyes(val),
+        trgtmet == 'no' ~ palno(val)
+      )
+    ) %>% 
+    left_join(locs, by = 'epchc_station') %>% 
+    st_as_sf(coords = c('Longitude', 'Latitude'), crs = prj)
+
+  # values to feed to legend  
+  yesval <- toplo %>% filter(trgtmet == 'yes') %>% pull(val)
+  noval <- toplo %>% filter(trgtmet == 'no') %>% pull(val)
+  
+  # for point scaling, original range
+  scls <- dplyr::case_when(
+    thrsel == 'chla' ~ c(0.59, 58), 
+    thrsel == 'la' ~ c(0.38, 5.92)
+  )
+  
+  # map with custom legends
+  mapview(toplo, fill = F, homebutton = F, popup = NULL, legend = F) %>% 
+    .@map %>% 
+    clearMarkers() %>% 
+    leafem::removeMouseCoordinates() %>%
+    addCircleMarkers(
+      data = toplo, 
+      layerId = ~epchc_station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = ~cols,
+      weight = 1,
+      fillOpacity = 1,
+      radius=~rescale(val, from = scls, to = c(4, 15)),
+      label = ~paste0('Station ', epchc_station, ' (target met: ', trgtmet, ', value ', round(val, 2), ', target ', target, ')')
+    ) %>% 
+    addLegend("bottomright", pal = palyes, title = "Target met", labels = thrsel, opacity = 1, values = yesval) %>% 
+    addLegend("bottomright", pal = palno, title = "Target not met", labels = thrsel, opacity = 1, values = noval)
+
+
+  
+})
+
+# attainment matrix
+attmat <- reactive({
+  
+  # input
+  trginps <- trginps()
+
+  req(trginps)
+  
+  out <- show_matrix(epcdata, trgs = trginps) + 
+    theme(
+      axis.text = element_text(size = 12)
+    )
+  
+  return(out)
+  
+})
+```
+
+Sidebar {.sidebar data-width=400}
+===========================================================
+
+##### CHLOROPHYLL TARGET
+
+<br>
+```{r}
+column(12, 
+       column(2, 'OTB'), 
+       column(10, sliderInput('otbchltrg', NULL, min = 0, max = 20, value = 8.5, step = 0.1, round = F)
+       ))
+column(12, 
+       column(2, 'HB'), 
+       column(10, sliderInput('hbchltrg', NULL, min = 0, max = 20, value = 13.2, step = 0.1, round = F)
+       ))
+column(12, 
+       column(2, 'MTB'),
+       column(10, sliderInput('mtbchltrg', NULL, min = 0, max = 20, value = 7.4, step = 0.1, round = F)
+       ))
+column(12, 
+       column(2, 'LTB'),
+       column(10, sliderInput('ltbchltrg', NULL, min = 0, max = 20, value = 4.6, step = 0.1, round = F)
+       ))
+```
+
+##### LIGHT ATTENUATION TARGET
+
+<br>
+```{r}
+column(12, 
+       column(2, 'OTB'), 
+       column(10, sliderInput('otblatrg', NULL, min = 0, max = 3, value = 0.83, step = 0.01, round = F)
+       ))
+column(12, 
+       column(2, 'HB'), 
+       column(10, sliderInput('hblatrg', NULL, min = 0, max = 3, value = 1.58, step = 0.01, round = F)
+       ))
+column(12, 
+       column(2, 'MTB'),
+       column(10, sliderInput('mtblatrg', NULL, min = 0, max = 3, value = 0.83, step = 0.01, round = F)
+       ))
+column(12, 
+       column(2, 'LTB'),
+       column(10, sliderInput('ltblatrg', NULL, min = 0, max = 3, value = 0.63, step = 0.01, round = F)
+       ))
+
+actionButton("reset_input", "Reset inputs")
+```
+
+ANNUAL MEANS TIME SERIES PLOTS
+===========================================================
+
+Column {.tabset .tabset-fade data-width=650}
+-----------------------------------------------------------------------
+
+### OLD TAMPA BAY
+
+```{r plot_otb, fig.height = 8, fig.width = 10}
+output$thrplototb <- renderPlot({thrplototb()})
+plotOutput('thrplototb')
+```
+
+### HILLSBOROUGH BAY 
+
+```{r plot_hb, fig.height = 8, fig.width = 10}
+output$thrplothb <- renderPlot({thrplothb()})
+plotOutput('thrplothb')
+```
+
+### MIDDLE TAMPA BAY
+
+```{r plot_mtb, fig.height = 8, fig.width = 10}
+output$thrplotmtb <- renderPlot({thrplotmtb()})
+plotOutput('thrplotmtb')
+```
+
+### LOWER TAMPA BAY
+
+```{r plot_ltb, fig.height = 8, fig.width = 10}
+output$thrplotltb <- renderPlot({thrplotltb()})
+plotOutput('thrplotltb')
+```
+
+TARGET ATTAINMENTS
+===========================================================
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### ATTAINMENT MATRIX
+
+```{r}
+output$attmat <- renderPlot({attmat()})
+plotOutput('attmat')
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### SITE ATTAINMENT BY YEAR
+
+```{r ecphc_validate}
+output$attmap <- renderLeaflet({attmap()})
+fillCol(flex = c(NA, 1),
+  inputPanel(
+    selectInput('yrsel', 'Select year:', choices = seq(1975, 2018), selected = 2018),
+    selectInput('thrsel', 'Select indicator:', choices = list('Chlorophyll-a (ug/l)' = 'chla', 'Light attenuation (m-1)' = 'la'))
+    ),
+  leafletOutput('attmap')
+)
+```
