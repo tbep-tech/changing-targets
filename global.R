@@ -1,7 +1,7 @@
 # libraries
 librarian::shelf(
   here, leaflet, tbep-tech/tbeptools, tidyverse, patchwork, shiny, 
-  sf, scales, shinyjs, RColorBrewer, htmltools, bslib
+  sf, scales, htmltools, bslib
 )
 
 prj <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
