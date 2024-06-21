@@ -29,7 +29,7 @@
 #' @import ggplot2
 #'
 #' @examples
-#' show_matrix(epcdata)
+#' show_matrixotb(epcdata)
 show_matrixotb <- function(epcdata, txtsz = 3, trgs = NULL, yrrng = NULL, bay_segment = c('NW', 'NE', 'CW', 'CE', 'SW', 'SE'), 
                         asreact = FALSE,
                         nrows = 10, abbrev = FALSE, family = NA, plotly = FALSE, partialyr = FALSE, width = NULL,
@@ -157,9 +157,9 @@ show_matrixotb <- function(epcdata, txtsz = 3, trgs = NULL, yrrng = NULL, bay_se
 #'
 #' @examples
 #' # view average estimates
-#' anlz_avedat(epcdata)
+#' anlz_avedatotb(epcdata)
 anlz_avedatotb <- function(epcdata, partialyr = FALSE){
-  
+
   # year month averages
   # long format, separate bay_segment for MTB into sub segs
   # mtb year month averages are weighted
@@ -169,12 +169,12 @@ anlz_avedatotb <- function(epcdata, partialyr = FALSE){
     tidyr::drop_na() %>%
     dplyr::mutate(
       bay_segment = dplyr::case_when(
-        epchc_station %in% c(40, 41, 63) ~ "CE",
-        epchc_station %in% c(65, 66) ~ "CW",
-        epchc_station %in% c(47, 60) ~ "NE",
         epchc_station %in% c(46, 64) ~ "NW",
-        epchc_station %in% c(36, 50, 51) ~ "SE",
+        epchc_station %in% c(47, 60) ~ "NE",
+        epchc_station %in% c(65, 66) ~ "CW",
+        epchc_station %in% c(40, 41, 63) ~ "CE",
         epchc_station %in% c(38, 67, 68) ~ "SW",
+        epchc_station %in% c(36, 50, 51) ~ "SE",
         TRUE ~ NA_character_
       )
     ) %>%
@@ -281,10 +281,10 @@ anlz_avedatotb <- function(epcdata, partialyr = FALSE){
 #' @concept analyze
 #'
 #' @examples
-#' avedat <- anlz_avedat(epcdata)
-#' anlz_attain(avedat)
+#' avedat <- anlz_avedatotb(epcdata)
+#' anlz_attainotb(avedat)
 anlz_attainotb <- function(avedat, magdurout = FALSE, trgs = NULL){
-  
+
   # default targets from data file
   if(is.null(trgs))
     trgs <- targets

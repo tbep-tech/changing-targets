@@ -4,6 +4,8 @@ librarian::shelf(
   sf, scales, htmltools, bslib, RColorBrewer
 )
 
+source(here('R/funcs.R'))
+
 prj <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 
 # # local file path
@@ -27,3 +29,16 @@ pthm <- theme(
 locs <- epcdata %>% 
   select(epchc_station, Longitude, Latitude) %>% 
   unique
+
+# add otb subsegs to targets
+trgotb <- targets %>% 
+  filter(bay_segment == 'OTB') %>% 
+  select(-bay_segment, -name)
+trgadd <- tibble(
+  bay_segment = c('NW', 'NE', 'CW', 'CE', 'SW', 'SE') ,
+  name = c('Old Tampa Bay Northwest', 'Old Tampa Bay Northeast', 'Old Tampa Bay Central West', 
+           'Old Tampa Bay Central East', 'Old Tampa Bay Southwest', 'Old Tampa Bay Southeast')
+) %>% 
+  bind_cols(trgotb)
+targets <- targets %>% 
+  bind_rows(trgadd)

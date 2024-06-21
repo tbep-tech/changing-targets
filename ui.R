@@ -44,14 +44,17 @@ page_navbar(
   ),
   nav_panel("TARGET ATTAINMENTS", 
             layout_column_wrap(
-              style = css(grid_template_columns = "1fr 2fr"),
-              layout_column_wrap(
-                card(
-                  full_screen = T,
-                  card_header("Target Attainment"),
-                  plotOutput('trgmat')
-                )
-              ), 
+              style = css(grid_template_columns = "1fr 1fr 2fr"),
+              card(
+                full_screen = T,
+                card_header("Target Attainment"),
+                plotOutput('trgmat')
+              ),
+              card(
+                full_screen = T,
+                card_header("Target Attainment OTB sub-segments"),
+                plotOutput('otbtrgmat')
+              ),
               card(
                 full_screen = T,
                 card_header("Site Attainment by year"),

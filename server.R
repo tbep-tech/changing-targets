@@ -19,10 +19,22 @@ function(input, output, session) {
     
     # inputs
     trginps <- tibble(
+      nwchltrg = input$otbchltrg,
+      nechltrg = input$otbchltrg,
+      cwchltrg = input$otbchltrg,
+      cechltrg = input$otbchltrg,
+      swchltrg = input$otbchltrg,
+      sechltrg = input$otbchltrg,
       otbchltrg = input$otbchltrg,
       hbchltrg = input$hbchltrg, 
       mtbchltrg = input$mtbchltrg, 
       ltbchltrg = input$ltbchltrg,
+      nwlatrg = input$otblatrg,
+      nelatrg = input$otblatrg,
+      cwlatrg = input$otblatrg,
+      celatrg = input$otblatrg,
+      swlatrg = input$otblatrg,
+      selatrg = input$otblatrg,
       otblatrg = input$otblatrg,
       hblatrg = input$hblatrg,
       mtblatrg = input$mtblatrg,
@@ -290,10 +302,28 @@ function(input, output, session) {
     
   })
   
+  # otb target attainment matrix
+  otbtrgmat <- reactive({
+    
+    # input
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    out <- show_matrixotb(epcdata, trgs = trginps, yrrng = c(1975, maxyr)) + 
+      theme(
+        axis.text = element_text(size = 13)
+      )
+    
+    return(out)
+    
+  })
+  
   ##
   # outputs 
   
   output$trgmat <- renderPlot(trgmat())
+  output$otbtrgmat <- renderPlot(otbtrgmat())
   output$attmap <- renderLeaflet(attmap())
   
   output$thrplototb <- renderPlot(thrplototb())
