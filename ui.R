@@ -69,7 +69,13 @@ page_navbar(
               nav_panel("Old Tampa Bay", plotOutput('thrplototb')),
               nav_panel("Hillsborough Bay", plotOutput('thrplothb')),
               nav_panel("Middle Tampa Bay", plotOutput('thrplotmtb')),
-              nav_panel("Lower Tampa Bay", plotOutput('thrplotltb'))
+              nav_panel("Lower Tampa Bay", plotOutput('thrplotltb')),
+              nav_panel("Old Tampa Bay NW", plotOutput('thrplotnw')),
+              nav_panel("Old Tampa Bay NE", plotOutput('thrplotne')),
+              nav_panel("Old Tampa Bay CW", plotOutput('thrplotcw')),
+              nav_panel("Old Tampa Bay CE", plotOutput('thrplotce')),
+              nav_panel("Old Tampa Bay SW", plotOutput('thrplotsw')),
+              nav_panel("Old Tampa Bay SE", plotOutput('thrplotse'))
             )        
   )
 )

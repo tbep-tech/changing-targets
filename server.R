@@ -151,6 +151,120 @@ function(input, output, session) {
     
   })
   
+  # OTB NW threshold plot
+  thrplotnw <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "NW", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "NW", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
+  # OTB NE threshold plot
+  thrplotne <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "NE", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "NE", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
+  # OTB CW threshold plot
+  thrplotcw <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "CW", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "CW", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
+  # OTB CE threshold plot
+  thrplotce <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "CE", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "CE", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
+  # OTB SW threshold plot
+  thrplotsw <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "SW", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "SW", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
+  # OTB SE threshold plot
+  thrplotse <- reactive({
+    
+    # inputs
+    trginps <- trginps()
+    
+    req(trginps)
+    
+    p1 <- show_thrplototb(epcdata, bay_segment = "SE", thr = "chla", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    p2 <- show_thrplototb(epcdata, bay_segment = "SE", thr = "la", trgs = trginps) + 
+      ggtitle(NULL) +
+      pthm
+    
+    p1 + p2 + plot_layout(ncol = 1)
+    
+  })
+  
   # data to map based on yrsel, thrsel
   mapdat <- reactive({
     
@@ -330,5 +444,11 @@ function(input, output, session) {
   output$thrplothb <- renderPlot(thrplothb())
   output$thrplotmtb <- renderPlot(thrplotmtb())
   output$thrplotltb <- renderPlot(thrplotltb())
+  output$thrplotnw <- renderPlot(thrplotnw())
+  output$thrplotne <- renderPlot(thrplotne())
+  output$thrplotcw <- renderPlot(thrplotcw())
+  output$thrplotce <- renderPlot(thrplotce())
+  output$thrplotsw <- renderPlot(thrplotsw())
+  output$thrplotse <- renderPlot(thrplotse())
   
 }
