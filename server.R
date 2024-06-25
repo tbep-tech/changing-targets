@@ -1,5 +1,7 @@
 function(input, output, session) {
   
+  # bslib::bs_themer()
+  
   ##
   # reactives 
   
