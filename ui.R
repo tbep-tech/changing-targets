@@ -1,5 +1,8 @@
 page_navbar(
   title = "Target evaluation",
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+  ),
   tags$style(HTML(
     "
     .label-left .form-group {
