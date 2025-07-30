@@ -1,3 +1,5 @@
+shinyOptions(cache = cachem::cache_disk("./app_cache/cache/"))
+
 # libraries
 librarian::shelf(
   here, leaflet, tbep-tech/tbeptools, tidyverse, patchwork, shiny, 
